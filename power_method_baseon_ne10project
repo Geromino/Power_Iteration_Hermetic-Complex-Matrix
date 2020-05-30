@@ -1,0 +1,101 @@
+
+in order implement power method on hermitian complex matrix  as follwing 
+
+(a+bi)(c+di)=(ac-bd)+i(ad+bc)
+
+so in our case  we have  two matrix 8x8 which represent real  and img  vulues of complex matrix 
+and we have two matrix of (8x1) which represent one complex matrix 
+
+define : 
+
+M hermitian complex =A+Bi
+N initial vector =C+Di
+
+A=real values of the matrix 
+B=img value of the matrix 
+C = real vulue of initilal vector
+D = img values of initial  vector 
+
+
+pseudocode :
+
+matrix_a=load first row in matrix A
+matrix_b=load first row in matrix B
+real_v=load matrix(C)
+img_v=load matrix(D)
+float32_t stop_power_method_value=1e-10;
+
+real_val = matrix_a*real_v-matrix_b*img_v;
+img_val  = matrix_a*img_v+matrix_b*real_v;
+ // calculate norm 
+float32x4_t sum=vaddq_f32(real_val,img_val)
+ne10_normalize_vec4f(sum)   // this  function need implement norm on 8 elelmts not for the function implement in pure c 
+
+
+
+
+float32x4_t hermtian_real_8_8[8] = {1.0,2.2,.....};
+float32x4_t hermtian_img_8_8[8] = {3.0,4.0.......};
+float32x4_t initial_vec_real[8] = {1,1,1,1........};
+float32x4_t real_part1[8] =       {0,0,0..........};
+float32x4_t initial_vec_img[8] = {0,0,0,..........};
+
+float32x4_t real_element1_new_vec = vmlaq_f32(real_part1, hermtian_real_8_8, initial_vec_real);
+float32x4_t real_element2_new_vec = vmlaq_f32(real_part2, hermtian_img_8_8, initial_vec_img);
+
+float32x4_t img_element1_new_vec = vmlaq_f32(img_part1, hermtian_real_8_8, initial_vec_img);
+float32x4_t img_element2_new_vec = vmlaq_f32(img_part2, hermtian_img_8_8, initial_vec_real);
+
+
+float32x4_t real_result=real_element1_new_vec-real_element2_new_vec;
+float32x4_t img_result=img_element1_new_vec+img_element2_new_vec;
+
+float32x4_t norm_vector=vaddq_f32(initial_vec_real,initial_vec_img)
+ne10_normalize_vec8f(sum)   // this  function need implement norm on 8 elelmts not for the function implement in pure c 
+
+//calculate  new  vector iteration 
+float32x4_t next_itaration_vec = vmlaq_f32(real_part1, norm_vector, real_result); 
+float32x4_t next_itaration_vec = vmlaq_f32(real_part1, norm_vector, img_result); 
+
+this process contiue until the diffrent between itaration vectors are small then value choosen 
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+.macro implement power method ne10 project
+
+
+descreption  first way is build macro like ne10 project 
+
+	
+	    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        @ A macro to load two vectors 1x8 ( from  originan matrix 8x8 )  and 8x1  which represnt initial vector  for power method 
+		@ the hermmitian matrix of complex value  therfore we need for matrix as follwoing :
+		@  vector (1x8) represet real  part of real matrix  8x8 
+		@  vector (1x8) represnt img   part of img  matrix  8x8 
+		@  vector (8x1) represent real part of initial vector 
+		@  vector (8x1) represent img  part of initial vector
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        .macro LOAD_4_Matrix
+
+		vld1.32  {d16-d19}, [r1]!            @ vector (1x8) represet real  part of real matrix  8x8 
+		vld1.32  {d20-d23}, [r1]!            @ vector (1x8) represnt img   part of img  matrix  8x8
+		vld1.32  {d0-d3}, [r2]!              @ vector (8x1) represent real part of initial vector 
+		vld1.32  {d4-d7}, [r2]!              @ vector (8x1) represent img  part of initial vector
+			
+        .endm
+		
+	    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		@ Multiplay two pairs of vectors in order get the real part 
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		
+		.macro CALULATE_real_part_of_new_vector
+		 vmul.f32    q12, q8, d0[0]      @ multiply col element 0 by matrix col 0
+		 vmla.f32    q12, q9, d0[1]      @ multiply-acc col element 1 by matrix col 1
+		 vmla.f32    q12, q10, d1[0]  @ multiply-acc col element 2 by matrix col 2
+         vmla.f32    q12, q11, d1[1]  @ multiply-acc col element 3 by matrix col 3
+
+ this macros  need be opperate 8 times  in order calculate new initial vector 
+ after this need load norm vector  and multiplay on 
